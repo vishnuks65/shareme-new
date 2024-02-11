@@ -4,10 +4,25 @@ import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import shareVideo from "../assets/share.mp4";
 import logo from "../assets/logowhite.png";
+import {jwtDecode} from 'jwt-decode';
+
+import {client} from '../client';
 
 const Login = () => {
+	const navigate = useNavigate();
 	const responseGoogle = (response) => {
-		console.log(response);
+		const decoded = jwtDecode(response.credential);
+		const {name,picture,sub} = decoded;
+		const user = {
+			_id:sub,
+			_type:'user',
+			userName:name,
+			image:picture,
+		}
+		localStorage.setItem('user', JSON.stringify(decoded));
+	client.createIfNotExists(user).then(()=>{
+		navigate('/',{replace:true})
+	})
 	};
 	return (
 		<div className="flex justify-start item-center flex-col h-screen">
@@ -31,11 +46,6 @@ const Login = () => {
 					</div>
 					<div className="shadow-2xl">
 						<GoogleLogin
-							clientId={
-								process
-									.env
-									.REACT_APP_GOOGLE_API_TOKEN
-							}
 							render={(
 								renderProps
 							) => (
@@ -55,9 +65,7 @@ const Login = () => {
 									Google
 								</button>
 							)}
-							onSuccess={
-								responseGoogle
-							}
+							onSuccess={responseGoogle}
 							onFailure={
 								responseGoogle
 							}
